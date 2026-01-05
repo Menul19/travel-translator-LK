@@ -1,0 +1,16 @@
+{
+  "name": "Menul Travel Translator",
+  "short_name": "MenulTravel",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0071e3",
+  "theme_color": "#0071e3",
+  "description": "Premium Voice and Image Translator for Travelers",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2598/2598851.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
