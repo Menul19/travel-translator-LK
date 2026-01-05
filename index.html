@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menul Travel - Pro PWA</title>
+    <title>Menul Travel - MTP Pro</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -17,13 +17,23 @@
         
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--sky); transition: 0.8s; display: flex; justify-content: center; overflow-x: hidden; min-height: 100vh; }
         
-        /* Background & Traveler Animation */
+        /* --- MTP LOGO CSS --- */
+        .mtp-logo {
+            width: 80px; height: 80px; background: var(--primary); border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 900; font-size: 24px;
+            margin: 0 auto 10px auto; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border: 3px solid rgba(255,255,255,0.3);
+            letter-spacing: 2px;
+        }
+
+        /* Scenery & Traveler */
         .world { position: fixed; bottom: 0; width: 100%; height: 300px; z-index: -1; }
         .mountains { position: absolute; bottom: 0; width: 200%; height: 150px; background: var(--mountain); clip-path: polygon(0% 100%, 15% 20%, 30% 70%, 45% 10%, 60% 55%, 75% 15%, 90% 75%, 100% 100%); animation: moveW 40s linear infinite; }
         @keyframes moveW { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         
         .traveler { position: fixed; bottom: 20px; left: -100px; width: 80px; z-index: 5; animation: walkP 25s linear infinite; }
-        .traveler-svg { width: 60px; fill: var(--text); animation: step 0.7s infinite alternate; }
+        .traveler-svg { width: 50px; fill: var(--text); animation: step 0.7s infinite alternate; }
         @keyframes walkP { 0% { left: -100px; } 100% { left: 110%; } }
         @keyframes step { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
@@ -33,9 +43,11 @@
         .install-banner { display: none; background: #34c759; color: white; padding: 12px; border-radius: 15px; text-align: center; cursor: pointer; font-weight: bold; margin-bottom: 15px; }
         
         select, textarea { width: 100%; background: transparent; border: none; color: var(--text); font-size: 16px; outline: none; }
-        .main-btn { width: 100%; padding: 15px; border-radius: 15px; border: none; background: var(--primary); color: white; font-weight: 800; cursor: pointer; }
+        .main-btn { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--primary); color: white; font-weight: 800; cursor: pointer; box-shadow: 0 5px 15px rgba(0,113,227,0.4); }
         .btn-row { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-sub { flex: 1; padding: 12px; border-radius: 12px; border: none; color: white; cursor: pointer; font-weight: bold; }
+        .btn-sub { flex: 1; padding: 12px; border-radius: 12px; border: none; color: white; cursor: pointer; font-weight: bold; font-size: 14px; }
+        
+        #loading { display: none; text-align: center; font-size: 12px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body data-theme="light">
@@ -45,34 +57,39 @@
 
     <div class="app-shell">
         <header style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: var(--primary); margin: 0;">Menul Travel</h1>
-            <button onclick="toggleTheme()" style="background: none; border: none; color: var(--text); cursor: pointer;"><i class="fas fa-adjust"></i> Mode</button>
+            <div class="mtp-logo">MTP</div>
+            <h2 style="color: var(--text); margin: 0; font-size: 24px;">Menul Travel</h2>
+            <button onclick="toggleTheme()" style="background: none; border: none; color: var(--text); cursor: pointer; margin-top: 5px;"><i class="fas fa-moon"></i> Switch Mode</button>
         </header>
 
         <div id="installBtn" class="install-banner" onclick="installApp()">
-            <i class="fas fa-download"></i> Install Menul Travel App
+            <i class="fas fa-download"></i> INSTALL MTP APP
         </div>
 
         <div class="glass-card">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                 <select id="fromL" style="width: 45%; font-weight: bold;"><option value="auto">Auto Detect</option><option value="en-US">English</option><option value="si-LK">Sinhala</option></select>
-                <span>➔</span>
-                <select id="toL" style="width: 45%; font-weight: bold;"><option value="si">Sinhala</option><option value="en">English</option></select>
+                <i class="fas fa-exchange-alt" style="opacity: 0.5;"></i>
+                <select id="toL" style="width: 45%; font-weight: bold;"><option value="si">Sinhala</option><option value="en" selected>English</option></select>
             </div>
-            <textarea id="inTxt" rows="4" placeholder="Type or use Voice/Photo..."></textarea>
+            
+            <textarea id="inTxt" rows="4" placeholder="මෙහි ලියන්න / Write here..."></textarea>
+            
+            <div id="loading">Scanning Image... 0%</div>
+
             <div class="btn-row">
-                <button class="btn-sub" style="background: #ff3b30;" onclick="startV()"><i class="fas fa-microphone"></i> Voice</button>
-                <button class="btn-sub" style="background: #ff9500;" onclick="document.getElementById('imgI').click()"><i class="fas fa-camera"></i> Photo</button>
+                <button class="btn-sub" style="background: #ef4444;" onclick="startV()"><i class="fas fa-microphone"></i> VOICE</button>
+                <button class="btn-sub" style="background: #f59e0b;" onclick="document.getElementById('imgI').click()"><i class="fas fa-camera"></i> PHOTO</button>
             </div>
             <input type="file" id="imgI" hidden accept="image/*">
         </div>
 
-        <button class="main-btn" onclick="translateNow()">TRANSLATE NOW</button>
+        <button class="main-btn" onclick="translateNow()">TRANSLATE</button>
 
-        <div class="glass-card" style="margin-top: 15px;">
-            <textarea id="outTxt" rows="4" readonly placeholder="Result..."></textarea>
+        <div class="glass-card" style="margin-top: 15px; border-bottom: 5px solid var(--primary);">
+            <textarea id="outTxt" rows="4" readonly placeholder="පරිවර්තනය (Result)..."></textarea>
         </div>
-        <p id="stat" style="text-align: center; font-size: 12px; opacity: 0.6;">Ready</p>
+        <p id="stat" style="text-align: center; font-size: 12px; opacity: 0.6; font-weight: bold;">Ready</p>
     </div>
 
     <script>
@@ -87,15 +104,11 @@
         async function installApp() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
-                deferredPrompt = null;
+                deferredPrompt.userChoice.then(() => {
+                    document.getElementById('installBtn').style.display = 'none';
+                    deferredPrompt = null;
+                });
             }
-        }
-
-        // Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
         }
 
         function toggleTheme() {
@@ -103,26 +116,26 @@
             b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
         }
 
-        // --- TRANSLATOR LOGIC ---
+        // --- TRANSLATOR CORE ---
         async function translateNow() {
             const txt = document.getElementById('inTxt').value;
             const to = document.getElementById('toL').value;
-            if(!txt) return;
+            if(!txt.trim()) return;
             document.getElementById('stat').innerText = "Translating...";
             try {
                 const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${to}&dt=t&q=${encodeURI(txt)}`);
                 const data = await res.json();
                 document.getElementById('outTxt').value = data[0].map(x => x[0]).join('');
-                document.getElementById('stat').innerText = "Done";
+                document.getElementById('stat').innerText = "Translation Done";
             } catch(e) { document.getElementById('stat').innerText = "Error!"; }
         }
 
-        // Voice (Fixed)
+        // Voice
         function startV() {
             const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!Speech) return alert("Voice not supported on this browser.");
+            if(!Speech) return alert("Browser not supported.");
             const rec = new Speech();
-            rec.lang = document.getElementById('fromL').value === 'auto' ? 'en-US' : document.getElementById('fromL').value;
+            rec.lang = document.getElementById('fromL').value === 'auto' ? 'si-LK' : document.getElementById('fromL').value;
             rec.start();
             document.getElementById('stat').innerText = "Listening...";
             rec.onresult = (e) => {
@@ -131,12 +144,31 @@
             };
         }
 
-        // Image (Fixed)
-        document.getElementById('imgI').onchange = (e) => {
-            document.getElementById('stat').innerText = "Scanning Image...";
-            Tesseract.recognize(e.target.files[0], 'eng+sin').then(({ data: { text } }) => {
+        // PHOTO TRANSLATOR (FIXED)
+        document.getElementById('imgI').onchange = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            document.getElementById('stat').innerText = "Processing Image...";
+
+            Tesseract.recognize(
+                file,
+                'eng+sin', // English සහ Sinhala අකුරු හඳුනාගැනීමට
+                { logger: m => {
+                    if(m.status === 'recognizing text') {
+                        loading.innerText = `Scanning: ${Math.round(m.progress * 100)}%`;
+                    }
+                }}
+            ).then(({ data: { text } }) => {
+                loading.style.display = 'none';
                 document.getElementById('inTxt').value = text;
-                translateNow();
+                document.getElementById('stat').innerText = "OCR Finished";
+                translateNow(); // පින්තූරෙන් අකුරු ගත්ත ගමන් translate කරනවා
+            }).catch(err => {
+                loading.style.display = 'none';
+                alert("Error scanning image. Please try again.");
             });
         };
     </script>
